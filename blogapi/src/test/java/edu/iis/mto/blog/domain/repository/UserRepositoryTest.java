@@ -40,7 +40,7 @@ class UserRepositoryTest {
 
         user2 = new User();
         user2.setFirstName("Andrzej");
-        user2.setLastName("Kowalski");
+        user2.setLastName("Stękała");
         user2.setEmail("andrzej@notadomain.com");
         user2.setAccountStatus(AccountStatus.NEW);
     }
@@ -90,6 +90,18 @@ class UserRepositoryTest {
         repository.save(user2);
 
         List<User> users = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Jan", NON_EXISTENT_STRING, "john@domain.com");
+
+        assertThat(users, hasSize(1));
+        assertEquals(users.get(0).getId(), persistedUser.getId());
+
+    }
+
+    @Test
+    public void shouldFindUserByFirstNameAndLastNameAndEmail() {
+        User persistedUser = repository.save(user);
+        repository.save(user2);
+
+        List<User> users = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Jan", "Kowalski", "john@domain.com");
 
         assertThat(users, hasSize(1));
         assertEquals(users.get(0).getId(), persistedUser.getId());
