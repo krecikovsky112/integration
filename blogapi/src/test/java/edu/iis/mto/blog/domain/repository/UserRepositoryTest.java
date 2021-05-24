@@ -28,15 +28,17 @@ class UserRepositoryTest {
     private UserRepository repository;
 
     private User user, user2;
+    private final String NON_EXISTENT_STRING = "nonExistentString";
 
     @BeforeEach
     void setUp() {
         user = new User();
         user.setFirstName("Jan");
+        user.setLastName("Kowalski");
         user.setEmail("john@domain.com");
         user.setAccountStatus(AccountStatus.NEW);
 
-        User user2 = new User();
+        user2 = new User();
         user2.setFirstName("Andrzej");
         user2.setLastName("Kowalski");
         user2.setEmail("andrzej@notadomain.com");
@@ -71,24 +73,13 @@ class UserRepositoryTest {
     }
 
     @Test
-    public void shouldFindAllUsersByFirstName() {
+    public void shouldFindUserByFirstName() {
         User persistedUser = repository.save(user);
         repository.save(user2);
 
-        List<User> users = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Jan", "", "");
+        List<User> users = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Jan", NON_EXISTENT_STRING, NON_EXISTENT_STRING);
 
-        assertThat(users, hasSize(2));
-        assertEquals(users.get(0).getId(), persistedUser.getId());
-    }
-
-    @Test
-    public void shouldFindAllUsersByFirstNameAndEmail() {
-        User persistedUser = repository.save(user);
-        repository.save(user2);
-
-        List<User> users = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Jan", "", "john@domain.com");
-
-        assertThat(users, hasSize(2));
+        assertThat(users, hasSize(1));
         assertEquals(users.get(0).getId(), persistedUser.getId());
 
     }
