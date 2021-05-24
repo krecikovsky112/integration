@@ -10,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
+import java.util.List;
+import java.util.Optional;
+
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 
 @DataJpaTest
 public class LikePostRepositoryTest {
@@ -65,6 +67,53 @@ public class LikePostRepositoryTest {
         entityManager.refresh(blogPost);
         assertThat(blogPost.getLikesCount(), equalTo(1));
         assertThat(blogPost.getLikes().get(0), equalTo(persistedLikePost));
+    }
+
+    @Test
+    void shouldFindNoLikesIfRepositoryIsEmpty() {
+        List<LikePost> likes = likePostRepository.findAll();
+        assertThat(likes, hasSize(0));
+    }
+
+    @Test
+    void shouldModifyUserInLikePost() {
+        LikePost persistedLikePost = new LikePost();
+        persistedLikePost.setUser(user);
+        persistedLikePost.setPost(blogPost);
+        entityManager.persistAndFlush(persistedLikePost);
+
+        User userToUpdateWith = new User();
+        userToUpdateWith.setAccountStatus(AccountStatus.CONFIRMED);
+        String userMail = "newUser@mail.com";
+        userToUpdateWith.setEmail(userMail);
+        entityManager.persistAndFlush(userToUpdateWith);
+
+        LikePost likePost = new LikePost();
+        likePost.setId(persistedLikePost.getId());
+        likePost.setPost(blogPost);
+        likePost.setUser(userToUpdateWith);
+        likePostRepository.save(likePost);
+
+        entityManager.flush();
+
+        entityManager.refresh(persistedLikePost);
+        assertThat(persistedLikePost.getUser().getId(), equalTo(userToUpdateWith.getId()));
+        assertThat(persistedLikePost.getUser().getEmail(), equalTo(userMail));
+    }
+
+    @Test
+    void shouldFindLikePostByUserAndPost() {
+        LikePost persistedLikePost = new LikePost();
+        persistedLikePost.setUser(user);
+        persistedLikePost.setPost(blogPost);
+        entityManager.persistAndFlush(persistedLikePost);
+
+        Optional<LikePost> optionalLikePost = likePostRepository.findByUserAndPost(user, blogPost);
+
+        assertThat(optionalLikePost.isPresent(), equalTo(true));
+        LikePost likePost = optionalLikePost.get();
+        assertThat(likePost.getPost().getId(), equalTo(blogPost.getId()));
+        assertThat(likePost.getUser().getId(), equalTo(user.getId()));
     }
 
 }
