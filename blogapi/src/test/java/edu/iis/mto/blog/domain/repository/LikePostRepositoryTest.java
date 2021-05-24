@@ -4,20 +4,16 @@ import edu.iis.mto.blog.domain.model.AccountStatus;
 import edu.iis.mto.blog.domain.model.BlogPost;
 import edu.iis.mto.blog.domain.model.LikePost;
 import edu.iis.mto.blog.domain.model.User;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 
-@RunWith(SpringRunner.class)
 @DataJpaTest
 public class LikePostRepositoryTest {
 
@@ -25,14 +21,17 @@ public class LikePostRepositoryTest {
     private TestEntityManager entityManager;
 
     @Autowired
-    private LikePostRepository repository;
+    private LikePostRepository likePostRepository;
+
+    @Autowired
+    private BlogPostRepository blogPostRepository;
 
     private User user;
     private BlogPost blogPost;
     private LikePost likePost;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         user = new User();
         user.setFirstName("Jan");
         user.setLastName("Kowalski");
@@ -40,22 +39,32 @@ public class LikePostRepositoryTest {
         user.setAccountStatus(AccountStatus.NEW);
 
         blogPost = new BlogPost();
-        blogPost.setEntry("test");
+        blogPost.setEntry("Sample Entry");
         blogPost.setUser(user);
-
-        likePost = new LikePost();
-        likePost.setPost(blogPost);
-        likePost.setUser(user);
 
         entityManager.persist(user);
         entityManager.persist(blogPost);
+        entityManager.flush();
+
+        likePost = new LikePost();
+        likePost.setUser(user);
+        likePost.setPost(blogPost);
     }
 
     @Test
-    public void shouldFindNoLikePostsIfRepositoryIsEmpty() {
-        List<LikePost> likePosts = repository.findAll();
+    void shouldSaveLikePost() {
+        LikePost persistedLikePost = likePostRepository.save(likePost);
 
-        assertThat(likePosts, hasSize(0));
+        assertThat(persistedLikePost.getId(), notNullValue());
+    }
+
+    @Test
+    void shouldAddSavedLikePostToLikesInBlogPost() {
+        LikePost persistedLikePost = likePostRepository.save(likePost);
+
+        entityManager.refresh(blogPost);
+        assertThat(blogPost.getLikesCount(), equalTo(1));
+        assertThat(blogPost.getLikes().get(0), equalTo(persistedLikePost));
     }
 
 }
