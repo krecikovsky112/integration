@@ -119,4 +119,15 @@ class UserRepositoryTest {
 
     }
 
+    @Test
+    public void shouldNotFindAnyUsersWithAllNonExistentParameters() {
+        repository.save(user);
+        repository.save(user2);
+
+        List<User> users = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase(NON_EXISTENT_STRING, NON_EXISTENT_STRING, NON_EXISTENT_STRING);
+
+        assertThat(users, hasSize(0));
+
+    }
+
 }
