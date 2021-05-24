@@ -84,4 +84,16 @@ class UserRepositoryTest {
 
     }
 
+    @Test
+    public void shouldFindUserByFirstNameAndEmail() {
+        User persistedUser = repository.save(user);
+        repository.save(user2);
+
+        List<User> users = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Jan", NON_EXISTENT_STRING, "john@domain.com");
+
+        assertThat(users, hasSize(1));
+        assertEquals(users.get(0).getId(), persistedUser.getId());
+
+    }
+
 }
