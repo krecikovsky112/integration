@@ -27,7 +27,7 @@ class UserRepositoryTest {
     @Autowired
     private UserRepository repository;
 
-    private User user;
+    private User user, user2;
 
     @BeforeEach
     void setUp() {
@@ -35,6 +35,12 @@ class UserRepositoryTest {
         user.setFirstName("Jan");
         user.setEmail("john@domain.com");
         user.setAccountStatus(AccountStatus.NEW);
+
+        User user2 = new User();
+        user2.setFirstName("Andrzej");
+        user2.setLastName("Kowalski");
+        user2.setEmail("andrzej@notadomain.com");
+        user2.setAccountStatus(AccountStatus.NEW);
     }
 
     @Test
@@ -66,12 +72,6 @@ class UserRepositoryTest {
 
     @Test
     public void shouldFindAllUsersByFirstName() {
-        User user2 = new User();
-        user2.setFirstName("Andrzej");
-        user2.setLastName("Kowalski");
-        user2.setEmail("andrzej@notadomain.com");
-        user2.setAccountStatus(AccountStatus.NEW);
-
         User persistedUser = repository.save(user);
         repository.save(user2);
 
@@ -79,6 +79,18 @@ class UserRepositoryTest {
 
         assertThat(users, hasSize(2));
         assertEquals(users.get(0).getId(), persistedUser.getId());
+    }
+
+    @Test
+    public void shouldFindAllUsersByFirstNameAndEmail() {
+        User persistedUser = repository.save(user);
+        repository.save(user2);
+
+        List<User> users = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Jan", "", "john@domain.com");
+
+        assertThat(users, hasSize(2));
+        assertEquals(users.get(0).getId(), persistedUser.getId());
+
     }
 
 }
